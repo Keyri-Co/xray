@@ -21,5 +21,6 @@
   "bugs": {
     "url": "https://github.com/Keyri-Co/xray/issues"
   },
-  "homepage": "https://github.com/Keyri-Co/xray#readme"
+  "homepage": "https://github.com/Keyri-Co/xray#readme",
+  "files": ["index.mjs","readme.md","package.json"]
 }
