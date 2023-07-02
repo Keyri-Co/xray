@@ -6,7 +6,7 @@ Keyri X-RAY can substantially reduce your app's surface area for fraud without s
 ## Installation
 
 ```bash
-npm i xxx --save
+npm i @keyri/xray --save
 ```
 
 ## Getting Started
@@ -18,7 +18,7 @@ Import the library and initialize it:
 
 ```javascript
 // Import the library
-import { XRAY } from "xxx";
+import { XRAY } from "@keyri/xray";
 
 // Instantiate the library to load into shadow-dom
 const xray = new XRAY();
@@ -27,7 +27,8 @@ const xray = new XRAY();
 let info = await xray.scan(
     data.eventType, // The type of event: Login, Signup, Visits, Access
     data.userId, // The id of the user in your system
-    data.yourPublicEcdhKey // This comes from our dashboard and is used to identify you and as an encryption key
+    data.yourPublicEcdhKey, // This comes from our dashboard and is used to identify you and as an encryption key
+    5_000  // Optional Timeout. If nothing happens before this, an error is returned 
 );
 
 // Do something useful with the data

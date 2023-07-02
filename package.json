@@ -1,26 +1,23 @@
 {
   "name": "@keyri/xray",
   "version": "1.0.0",
-  "description": "Fraud Prevention Suite",
+  "description": "Fraud Library",
   "main": "index.mjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" "
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Keyri-Co/xray.git"
+    "url": "git+https://github.com/keyri-co/xray.git"
   },
   "keywords": [
-    "fraud-prevention",
-    "fraud",
     "fingerprint",
-    "captcha"
+    "fraud"
   ],
   "author": "Justin W. Wolcott",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Keyri-Co/xray/issues"
+    "url": "https://github.com/keyri-co/xray/issues"
   },
-  "homepage": "https://github.com/Keyri-Co/xray#readme",
-  "files": ["index.mjs","readme.md","package.json"]
+  "homepage": "https://github.com/keyri-co/xray#readme"
 }
