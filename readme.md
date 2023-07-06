@@ -11,10 +11,7 @@ npm i @keyri/xray --save
 
 ## Getting Started
 
-
-
-
-Import the library and initialize it:
+Import the library. Instantiate it. Call the `scan` method.:
 
 ```javascript
 // Import the library
@@ -36,11 +33,21 @@ console.log({info});
 
 ```
 
+## Can It Go Faster?
+
+Yes!
+
+## How Do I Make It Faster?
+
+The most time consuming thing we do is IP analysis, which combines third party data with machine learning. We temporarily cache that data.
+
+If you run the `scan` method immediately after page-load with a `visits` event-type and an `"undefined"` (note the string) user; the next time the method is run it should be about 5x faster!  
+
 ## What Does It Return?
 
 The `scan` method returns an encrypted JavaScript object that contains information about the user's activity and device. Here's a breakdown of the properties you'll find in this object:
 
-* `state`: Represents the result of the event, depending on your risk tolerance settings. Possible values are "warn", "allow", "deny".
+* `riskSummary`: Represents the result of the event, depending on your risk tolerance settings. Possible values are "warn", "allow", "deny".
 
 * `ipAddress`: The IP address of the client.
 
@@ -58,7 +65,9 @@ The `scan` method returns an encrypted JavaScript object that contains informati
 
 * `event_type`: The type of event logged, like "login", "signup", etc.
 
-* `deviceAge`: The age of the device ID in hours. Since misbehaving device IDs can be blocked, older device IDs are generally more trustworthy.
+* `deviceAge`: The age of the device ID for YOUR service in hours. Since misbehaving device IDs can be blocked, older device IDs are generally more trustworthy.
+
+* `globalDeviceAge`: The age of the device ID for ANY service in hours.
 
 Here's a typical decrypted response:
 
