@@ -24,8 +24,14 @@ const xray = new XRAY();
 let info = await xray.scan(
     data.eventType, // The type of event: Login, Signup, Visits, Access
     data.userId, // The id of the user in your system
-    data.yourPublicEcdhKey, // This comes from our dashboard and is used to identify you and as an encryption key
-    5_000  // Optional Timeout. If nothing happens before this, an error is returned 
+    data.yourPublicEcdhKey, // This comes from our dashboard and is used
+                            // -- to identify you and as an encryption key
+    5_000,  // Optional Timeout. 
+            // -- If nothing happens before this, an error is returned 
+    "safe"  // Optional Commit-Mode. When used, the API does not
+            // -- automatically update information about the device or user.
+            // -- The Relying-Party (you) must make an additional API
+            // -- call to make this happen. 
 );
 
 // Do something useful with the data
@@ -33,19 +39,29 @@ console.log({info});
 
 ```
 
-## Can It Go Faster?
 
-Yes!
-
-## How Do I Make It Faster?
-
-The most time consuming thing we do is IP analysis, which combines third party data with machine learning. We temporarily cache that data.
-
-If you run the `scan` method immediately after page-load with a `visits` event-type and an `"undefined"` (note the string) user; the next time the method is run it should be about 5x faster!  
 
 ## What Does It Return?
 
 The `scan` method returns an encrypted JavaScript object that contains information about the user's activity and device. Here's a breakdown of the properties you'll find in this object:
+
+## Encrypted Object
+
+The return data is HKDF Encrypted. The return object gives you everything you need to decrypt it. Additionally, it provides 2 signatures for you to verify the authenticity of the message if you want to (you want to)
+
+* `ciphertext`: base64 encoded, encrypted response object from the API that was encrypted with the publicKey you provided in the `scan` method
+
+* `iv`: base64 encoded initialization vector
+
+* `salt`: base64 encoded salt
+
+* `publicEncryptionKey`: public key used by the API to encrypt the data
+
+* `apiCiphertextSignature`: The signature by the API of the `ciphertext`. The API's public signature key is: `MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEZ+MDV5IhqMBjWVls9NxsXx6h3S9FuqE+BsWS3i2cbjVH3dchhNQNvrzXA2EZ+FvllK+7GO2woKocAoSss/1hmw==`
+
+* `clientCiphertextSignature`: The signature by the browser of the `ciphertext`. The public key is available in the Decrypted-Object.
+
+## Decrypted Object
 
 * `riskSummary`: Represents the result of the event, depending on your risk tolerance settings. Possible values are "warn", "allow", "deny".
 
@@ -90,3 +106,13 @@ Here's a typical decrypted response:
 }
 
 ```
+
+## Can It Go Faster?
+
+Yes!
+
+## How Do I Make It Faster?
+
+The most time consuming thing we do is IP analysis, which combines third party data with machine learning. We temporarily cache that data.
+
+If you run the `scan` method immediately after page-load with a `visits` event-type and an `"undefined"` (note the string) user; the next time the method is run it should be about 5x faster!  
