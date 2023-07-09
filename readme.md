@@ -3,13 +3,13 @@
 
 Keyri X-RAY can substantially reduce your app's surface area for fraud without sacraficing user experience. 
 
-## Installation
+# Installation
 
 ```bash
 npm i @keyri/xray --save
 ```
 
-## Getting Started
+# Getting Started
 
 Import the library. Instantiate it. Call the `scan` method.:
 
@@ -41,7 +41,7 @@ console.log({info});
 
 
 
-## What Does It Return?
+# What Does It Return?
 
 The `scan` method returns an encrypted JavaScript object that contains information about the user's activity and device. Here's a breakdown of the properties you'll find in this object:
 
@@ -61,11 +61,26 @@ The return data is HKDF Encrypted. The return object gives you everything you ne
 
 * `clientCiphertextSignature`: The signature by the browser of the `ciphertext`. The public key is available in the Decrypted-Object.
 
+Here's a typical encrypted object:
+
+```json
+{
+    "ciphertext": "GpRLvVKkG0...ypZujlupDmN3lNY=",
+    "salt": "4UAE...Wt4oL4A==",
+    "iv": "jhx...TKL9w==",
+    "publicEncryptionKey": "MFkwEwYHKoZIzj0CA...vaUJEgw==",
+    "apiCiphertextSignature": "YYNpUBWkS0nlmr8A9q...v9XaQ==",
+    "clientCipertextSignature": "e4OFmenmN+...9/Mtys3kGpp6CYA=="
+}
+```
+
 ## Decrypted Object
 
 * `riskSummary`: Represents the result of the event, depending on your risk tolerance settings. Possible values are "warn", "allow", "deny".
 
 * `ipAddress`: The IP address of the client.
+
+* `ipLocationData`: city, region, country, and time zone based on ip-address
 
 * `userId`: The ID of the user in your system, usually their email address. Validate this value to ensure its accuracy.
 
@@ -85,26 +100,40 @@ The return data is HKDF Encrypted. The return object gives you everything you ne
 
 * `globalDeviceAge`: The age of the device ID for ANY service in hours.
 
+* `timestamp`: Timestamp of the assessment provided by the API
+
+* `clientPublicSignatureKey`: Public Signature Key of the Client-Device. Should be used to verify signature of `Encrypted-Object`
+
+* `clientRequest`: If you set `Commit-Mode` to "safe", you will have to make a POST request with it to the following end-point: `https://fp.keyri.com/v1/client/`
+
 Here's a typical decrypted response:
 
-```javascript
+```json
 {
-  "state": "warn",
-  "ipAddress": "6.6.6.6",
-  "userId": "evil@evil.com",
-  "deviceId": "399c6617-6b9b-4c45-a9fb-6b827cf845c5",
-  "wagId": "BxZQPgacdjFm6lKADc3F72Pb5o0=",
-  "signals": [
-    "max_events_per_timeframe"
-  ],
-  "trustScore": 0.0750399185765636,
-  "changes": [
-    {"type": "new_country", "value": "Antarctica"}
-  ],
-  "event_type": "login",
-  "deviceAge": 0.0242025
+    "ipAddress": "6.6.6.6",
+    "userId": "Bad@Guy.com",
+    "deviceId": "6c6d32ed-50...-c453429b3d5b",
+    "wagId": "NFDp7Gg0vv...MMAaDTKWP0=",
+    "signals": [
+        "multiple_account_signups_per_device",
+        "multiple_account_access_per_device"
+    ],
+    "trustScore": 0.11329117957360035,
+    "changes": [],
+    "event_type": "signup",
+    "deviceAge": 157.31792944444445,
+    "globalDeviceAge": 168.628485,
+    "timeStamp": 1688905691858,
+    "riskSummary": "deny",
+    "ipLocationData": {
+        "city": "Dallas",
+        "region": "Texas",
+        "country": "US",
+        "time_zone": "CDT"
+    },
+    "clientPublicSignatureKey": "MFkwEwYHKoZ...7VGcI7aNHIvQ==",
+    "clientRequest": "eyJjaXBoZXJ0ZXh0IjoiV...Zz09In0="
 }
-
 ```
 
 ## Can It Go Faster?
