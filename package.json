@@ -1,6 +1,6 @@
 {
   "name": "@keyri/xray",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Fraud Library",
   "main": "index.mjs",
   "types": "index.d.ts",
