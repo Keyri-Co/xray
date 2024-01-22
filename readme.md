@@ -155,3 +155,122 @@ Here's a typical decrypted response:
     }
 }
 ```
+---
+# COMPLETE EXAMPLE 
+
+## Client - `index.html`
+```html
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charSet="utf-8"/>
+    </head>
+    <body>
+        <h1>GOODBYE FRAUD!</h1>
+    </body>
+
+    <!-- Adding library from NPM via UNPKG -->
+    <script type="module" >
+
+        // Pull Library from CDN
+        import {XRAY} from 'https://unpkg.com/@keyri/xray@2.0.0/index.mjs';
+
+        // n.b. when full production, `XRAY` needs no args
+        //
+        const _xray = new XRAY(iframe_url);             // Instantiate the wrapper class
+        await _xray.load();                             // Load the library into memory
+        const xray = _xray.xray;                        // `.xray` is the actual worker here
+
+        let encrypted_fraud_data = await xray.scan({"apiUrl": "local"});
+
+        // USE YOUR OWN API IN REAL LIFE!!!
+        // (but you can use mine for now...)
+        const your_data_handler_url = "https://jv1buh5aac.execute-api.eu-central-1.amazonaws.com/prod";
+
+        try{
+            
+            const data_response = await fetch(your_data_handler_url, {
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(encrypted_fraud_data)
+            });
+
+            const data = await data_response.json();
+
+            console.log({data});
+
+        } catch(e){
+            console.error(e);
+        }
+
+
+
+    </script>
+
+</html>
+```
+
+## Server - `aws-lambda`
+```javascript
+// Set default response headers as `const`
+let DEFAULT_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Credentials": true,
+};
+
+export const handler = async (event) => {
+  
+  // N.B. YOU SHOULD MAKE A _REAL_ APPLICATION WITH ERROR CHECKING
+  // AND SOLID DEV PRACTICES. THIS IS A PROOF-OF-CONCEPT.
+  //
+  // IN OTHER WORDS...DON'T TRY THIS AT HOME!
+  // 
+  const body = JSON.parse(event.body);
+  
+  const url = "https://fp.keyri.com/v1/client";
+  const ipAddress =  event.requestContext.identity.sourceIp;
+  const Service_Encryption_Key = env.Service_Encryption_Key;
+  const Service_Decryption_Key = env.Service_Decryption_Key;
+  const API_Key = env.API_Key;
+  
+  const sendBody = {
+    ...body, 
+    "userId": "undefined",
+    "eventType": "visits",
+    "metadata": {},
+    ipAddress,
+    headers: event.headers,
+    API_Key,
+    Service_Encryption_Key,
+    Service_Decryption_Key
+  };
+  
+  let returnData = await fetch(url, {
+      method: 'POST', // Method itself
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(sendBody)
+  });
+  
+  let returnDataJson = await returnData.json();
+
+  // Probably want to get fancier here - this'll do for demo purposes:
+  let statusCode;
+  if(returnDataJson?.riskSummary === "allow"){
+    statusCode = 200;
+  } else if(returnDataJson?.riskSummary === "warn"){
+    statusCode = 302;
+    DEFAULT_HEADERS = {...DEFAULT_HEADERS, "Location": "./bicycle_identification_adventure.html"}
+  } else {
+    statusCode = 400;
+    DEFAULT_HEADERS = {...DEFAULT_HEADERS, "Location": "./blocked.html"}
+  }
+  
+  return {
+    statusCode,
+    body: JSON.stringify(returnDataJson),
+    headers: DEFAULT_HEADERS
+  };
+
+};
+
+```
