@@ -1,78 +1,97 @@
 # Keyri XRAY:
-## _Fewer Captchas. Happier Users. Less Fraud._
+### Fewer Captchas. Lower Bounce Rate. Increase Revenue. Decrease Fraud. 
 
 Keyri X-RAY can substantially reduce your app's surface area for fraud without sacraficing user experience. 
 
-# Installation
+# Client Side
+
+## Installation
+Pretty standard here, you can either use NPM / Yarn if you're compiling the code, or pull from the CDN of your choice.
 
 ```bash
 npm i @keyri/xray --save
 ```
 
-# Getting Started
+\- or - 
 
+```html
+<!-- Adding library from NPM via UNPKG -->
+<script type="module" >
+
+    // Pull Library from CDN
+    import {XRAY} from 'https://unpkg.com/@keyri/xray/index.mjs';
+
+</script>
+```
+
+## Running It
 Import the library. Instantiate it. Call the `scan` method.:
 
 ```javascript
-// Import the library
-import { XRAY } from "@keyri/xray";
+const _xray = new XRAY();    // Instantiate the wrapper class
+await _xray.load();          // Load the library into memory
+const xray = _xray.xray;     // `.xray` is the actual worker here
 
-// Instantiate the library to load into shadow-dom
-const xray = new XRAY();
-
-// Call the method with your eventType, userId, and your publicKey
-let info = await xray.scan(
-    data.eventType, // The type of event: Login, Signup, Visits, Access
-    data.userId, // The id of the user in your system
-    data.yourPublicEcdhKey, // This comes from our dashboard and is used
-                            // -- to identify you and as an encryption key
-    5_000,  // Optional Timeout. 
-            // -- If nothing happens before this, an error is returned 
-    "safe"  // Optional Commit-Mode. When used, the API does not
-            // -- automatically update information about the device or user.
-            // -- The Relying-Party (you) must make an additional API
-            // -- call to make this happen. 
-);
-
-// Do something useful with the data
-console.log({info});
+// * Perform Local Analysis Of The User's Client * //
+const encrypted_fraud_data = await xray.scan({"apiUrl": "local"});
 
 ```
 
+## Now What?
 
+Forward this data to your server...and from there to our API for processing and analysis:
 
-# What Does It Return?
-
-The `scan` method returns an encrypted JavaScript object that contains information about the user's activity and device. Here's a breakdown of the properties you'll find in this object:
-
-## Encrypted Object
-
-The return data is HKDF Encrypted. The return object gives you everything you need to decrypt it. Additionally, it provides 2 signatures for you to verify the authenticity of the message if you want to (you want to)
-
-* `ciphertext`: base64 encoded, encrypted response object from the API that was encrypted with the publicKey you provided in the `scan` method
-
-* `iv`: base64 encoded initialization vector
-
-* `salt`: base64 encoded salt
-
-* `publicEncryptionKey`: public key used by the API to encrypt the data
-
-* `apiCiphertextSignature`: The signature by the API of the `ciphertext`. The API's public signature key is: `MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEZ+MDV5IhqMBjWVls9NxsXx6h3S9FuqE+BsWS3i2cbjVH3dchhNQNvrzXA2EZ+FvllK+7GO2woKocAoSss/1hmw==`
-
-* `clientCiphertextSignature`: The signature by the browser of the `ciphertext`. The public key is available in the Decrypted-Object.
-
-Here's a typical encrypted object:
+You can forward this information to your server via form submission, as a standalone XHR Request, through a websocket tunnel, webRTC - whatever. 
 
 ```json
 {
-    "ciphertext": "GpRLvVKkG0...ypZujlupDmN3lNY=",
-    "salt": "4UAE...Wt4oL4A==",
-    "iv": "jhx...TKL9w==",
-    "publicEncryptionKey": "MFkwEwYHKoZIzj0CA...vaUJEgw==",
-    "apiCiphertextSignature": "YYNpUBWkS0nlmr8A9q...v9XaQ==",
-    "clientCipertextSignature": "e4OFmenmN+...9/Mtys3kGpp6CYA=="
+    "encryptedB64Payload": "eyJjbGllbnRFbmNyeX...U4UmVJK09wOHc9PSJ9"
 }
 ```
+
+# Server Side
+
+## Installation
+None Required! 
+
+Seriously. You'll make a REST request as a JSON with some `.env` variables.
+
+Bonus! We're not a [Supply Chain Attack](https://en.wikipedia.org/wiki/Supply_chain_attack#Examples) - vector!
+
+## Running It
+
+Build a JSON Payload. Make a REST-POST. That's it!
+
+```javascript
+
+  const url = "https://fp.keyri.com/v1/client";
+
+  // 1.) Create A Payload Object to send to our API
+  const sendBody = {
+    "encryptedB64Payload": "eyJjbGllbnRFbmNyeX...U4UmVJK09wOHc9PSJ9",
+    "userId": "undefined",
+    "eventType": "visits",
+    "metadata": {},
+    ipAddress,
+    headers: event.headers,
+    API_Key,
+    Service_Encryption_Key,
+    Service_Decryption_Key
+  };
+  
+  // 2.) Send the Data, Get a Response.
+  let returnData = await fetch(url, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(sendBody)
+  });
+  
+  let returnDataJson = await returnData.json();
+
+
+```
+
+
 
 ## Decrypted Object
 
@@ -104,7 +123,7 @@ Here's a typical encrypted object:
 
 * `clientPublicSignatureKey`: Public Signature Key of the Client-Device. Should be used to verify signature of `Encrypted-Object`
 
-* `clientRequest`: If you set `Commit-Mode` to "safe", you will have to make a POST request with it to the following end-point: `https://fp.keyri.com/v1/client/`
+* `instance`: Everything available to the rules engine for processing.
 
 Here's a typical decrypted response:
 
@@ -131,17 +150,8 @@ Here's a typical decrypted response:
         "country": "US",
         "time_zone": "CDT"
     },
-    "clientPublicSignatureKey": "MFkwEwYHKoZ...7VGcI7aNHIvQ==",
-    "clientRequest": "eyJjaXBoZXJ0ZXh0IjoiV...Zz09In0="
+    "instance": {
+        ...
+    }
 }
 ```
-
-## Can It Go Faster?
-
-Yes!
-
-## How Do I Make It Faster?
-
-The most time consuming thing we do is IP analysis, which combines third party data with machine learning. We temporarily cache that data.
-
-If you run the `scan` method immediately after page-load with a `visits` event-type and an `"undefined"` (note the string) user; the next time the method is run it should be about 5x faster!  
