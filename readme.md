@@ -1,19 +1,19 @@
 # Keyri XRAY:
-### Fewer Captchas. Lower Bounce Rate. Increase Revenue. Decrease Fraud. 
+### Enhanced Security, Improved User Experience.
 
-Keyri X-RAY can substantially reduce your app's surface area for fraud without sacraficing user experience. 
+Keyri X-RAY effectively reduces fraud risks in your app while maintaining a seamless user experience. 
 
 # Client Side
 
-## Installation
-Pretty standard here, you can either use NPM / Yarn if you're compiling the code, or pull from the CDN of your choice.
+### Installation
+Easily integrate Keyri X-RAY using NPM/Yarn or directly from a CDN.
 
+#### Using NPM/Yarn:
 ```bash
 npm i @keyri/xray --save
 ```
 
-\- or - 
-
+#### Using CDN:
 ```html
 <!-- Adding library from NPM via UNPKG -->
 <script type="module" >
@@ -24,24 +24,23 @@ npm i @keyri/xray --save
 </script>
 ```
 
-## Running It
-Import the library. Instantiate it. Call the `scan` method.:
+### Usage
+Simple steps to integrate and use the Keyri X-RAY library:
 
 ```javascript
-const _xray = new XRAY();    // Instantiate the wrapper class
-await _xray.load();          // Load the library into memory
-const xray = _xray.xray;     // `.xray` is the actual worker here
+const _xray = new XRAY();    // Instantiate the library
+await _xray.load();          // Load into memory
+const xray = _xray.xray;     // Expose the main functionality
 
-// * Perform Local Analysis Of The User's Client * //
+// Perform Local Analysis
 const encrypted_fraud_data = await xray.scan({"apiUrl": "local"});
 
 ```
 
-## Now What?
+### Data Transmission
+Send the collected data to _your_ server using your preferred method (XHR, WebSockets, WebRTC, etc.).
 
-Forward this data to your server...and from there to our API for processing and analysis:
-
-You can forward this information to your server via form submission, as a standalone XHR Request, through a websocket tunnel, webRTC - whatever. 
+Example payload: 
 
 ```json
 {
@@ -51,22 +50,18 @@ You can forward this information to your server via form submission, as a standa
 
 # Server Side
 
-## Installation
-None Required! 
+### Installation
+No additional installation needed on the server side.
 
-Seriously. You'll make a REST request as a JSON with some `.env` variables.
+### Usage
 
-Bonus! We're not a [Supply Chain Attack](https://en.wikipedia.org/wiki/Supply_chain_attack#Examples) - vector!
-
-## Running It
-
-Build a JSON Payload. Make a REST-POST. That's it!
+Create a JSON payload and make a REST POST request to our API.
 
 ```javascript
 
   const url = "https://fp.keyri.com/v1/client";
 
-  // 1.) Create A Payload Object to send to our API
+  // Create Payload
   const sendBody = {
     "encryptedB64Payload": "eyJjbGllbnRFbmNyeX...U4UmVJK09wOHc9PSJ9",
     "userId": "undefined",
@@ -79,7 +74,7 @@ Build a JSON Payload. Make a REST-POST. That's it!
     Service_Decryption_Key
   };
   
-  // 2.) Send the Data, Get a Response.
+  // Send and receive response
   let returnData = await fetch(url, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
@@ -93,39 +88,39 @@ Build a JSON Payload. Make a REST-POST. That's it!
 
 
 
-## Decrypted Object
+### Decrypted Object
 
-* `riskSummary`: Represents the result of the event, depending on your risk tolerance settings. Possible values are "warn", "allow", "deny".
+* `riskSummary`:  Outcome based on your risk settings (e.g., "warn", "allow", "deny").
 
-* `ipAddress`: The IP address of the client.
+* `ipAddress`: Client's IP address.
 
-* `ipLocationData`: city, region, country, and time zone based on ip-address
+* `ipLocationData`: Geographical data derived from IP (city, region, country, and time zone)
 
-* `userId`: The ID of the user in your system, usually their email address. Validate this value to ensure its accuracy.
+* `userId`: User ID in your system.
 
-* `deviceId`: A unique ID we've assigned to the client's device.
+* `deviceId`: Unique device ID.
 
-* `wagId`: A combination of the user's screen size and IP address. Useful when you want to block a specific user on public Wi-Fi, rather than blocking an entire IP address.
+* `wagId`: Liberal device ID - similar across browsers.
 
-* `signals`: An array that lists suspicious signals detected during the session, e.g., "max_events_per_timeframe".
+* `signals`: Suspicious signals detected.
 
 * `trustScore`: A score between 0 and 1, based on browser metrics, behavioral analytics, and Bayesian machine learning. A higher score indicates a "good" user.
 
-* `changes`: An array of changes being made to the user or the device. For example, when a new country is added, or a new IP is registered, these changes will be recorded here.
+* `changes`: Recorded changes to user or device.
 
-* `event_type`: The type of event logged, like "login", "signup", etc.
+* `event_type`: Type of logged event.
 
-* `deviceAge`: The age of the device ID for YOUR service in hours. Since misbehaving device IDs can be blocked, older device IDs are generally more trustworthy.
+* `deviceAge`:  Age of the device ID in _your_ service.
 
-* `globalDeviceAge`: The age of the device ID for ANY service in hours.
+* `globalDeviceAge`: Age of the device ID across _any_ service.
 
-* `timestamp`: Timestamp of the assessment provided by the API
+* `timestamp`: Time of the API's assessment.
 
-* `clientPublicSignatureKey`: Public Signature Key of the Client-Device. Should be used to verify signature of `Encrypted-Object`
+* `clientPublicSignatureKey`: Key for verifying the encrypted object's signature.
 
-* `instance`: Everything available to the rules engine for processing.
+* `instance`: Data available for rules engine processing.
 
-Here's a typical decrypted response:
+Example of a typical decrypted response:
 
 ```json
 {
@@ -158,7 +153,7 @@ Here's a typical decrypted response:
 ---
 # COMPLETE EXAMPLE 
 
-## Client - `index.html`
+### Client (`index.html`)
 ```html
 <!DOCTYPE html>
 <html>
@@ -210,7 +205,7 @@ Here's a typical decrypted response:
 </html>
 ```
 
-## Server - `aws-lambda`
+### Server (`aws-lambda`)
 ```javascript
 // Set default response headers as `const`
 let DEFAULT_HEADERS = {
@@ -229,9 +224,9 @@ export const handler = async (event) => {
   
   const url = "https://fp.keyri.com/v1/client";
   const ipAddress =  event.requestContext.identity.sourceIp;
-  const Service_Encryption_Key = env.Service_Encryption_Key;
-  const Service_Decryption_Key = env.Service_Decryption_Key;
-  const API_Key = env.API_Key;
+  const Service_Encryption_Key = process.env.Service_Encryption_Key;
+  const Service_Decryption_Key = process.env.Service_Decryption_Key;
+  const API_Key = process.env.API_Key;
   
   const sendBody = {
     ...body, 
