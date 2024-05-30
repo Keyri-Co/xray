@@ -171,9 +171,7 @@ Example of a typical decrypted response:
 
     // n.b. when full production, `XRAY` needs no args
     //
-    const _xray = new XRAY(iframe_url); // Instantiate the wrapper class
-    await _xray.load(); // Load the library into memory
-    const xray = _xray.xray; // `.xray` is the actual worker here
+    const xray = new XRAY(iframe_url); // Instantiate the wrapper class
 
     let encrypted_fraud_data = await xray.scan({ apiUrl: 'local' });
 
